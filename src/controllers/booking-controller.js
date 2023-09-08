@@ -21,16 +21,15 @@ async function createBooking(req, res) {
 
 async function makePayment(req, res) {
   try {
-    const idempotencyKey = req.headers["x-idempotency-key"];
+    const idempotencyKey = req.headers["x-idempotency-key"]; // req.headers -> An object containing the predefined/custom header given in the current request.
     if (!idempotencyKey) {
       return res
         .status(StatusCodes.BAD_REQUEST)
-        .json({ message: "idempotency key missing" });
+        .json({ message: "Idempotency Key missing" });
     }
     if (inMemDb[idempotencyKey]) {
-      return res
-        .status(StatusCodes.BAD_REQUEST)
-        .json({ message: "Cannot retry on a successful payment" });
+      ErrorResponse.error = "Cannot retry the request on a Successful Payment";
+      return res.status(StatusCodes.BAD_REQUEST).json(ErrorResponse);
     }
     const response = await BookingService.makePayment({
       totalCost: req.body.totalCost,
@@ -46,7 +45,33 @@ async function makePayment(req, res) {
   }
 }
 
+async function getAllFlights(req, res) {
+  try {
+    const response = await BookingService.getAllFlights(req.query);
+    SuccessResponse.data = response;
+    return res.status(StatusCodes.OK).json(SuccessResponse);
+  } catch (error) {
+    ErrorResponse.error = error;
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+  }
+}
+
+async function getBookings(req, res) {
+  try {
+    const response = await BookingService.getBookings({
+      userId: req.body.userId,
+    });
+    SuccessResponse.data = response;
+    return res.status(StatusCodes.OK).json(SuccessResponse);
+  } catch (error) {
+    ErrorResponse.error = error;
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(ErrorResponse);
+  }
+}
+
 module.exports = {
   createBooking,
   makePayment,
+  getAllFlights,
+  getBookings,
 };

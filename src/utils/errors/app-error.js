@@ -1,3 +1,6 @@
+/*
+There is an Error class in JS
+*/
 class AppError extends Error {
   constructor(message, statusCode) {
     super(message);
